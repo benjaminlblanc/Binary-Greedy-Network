@@ -1,5 +1,5 @@
 # Binary-Greedy-Network
-A pytorch implementation of the Binary Greedy Network (BGN) algorithm.
+A python implementation of the Binary Greedy Network (BGN) algorithm.
 
 ## Requirements
 * Numpy: 1.19.5
