@@ -1,0 +1,1 @@
+algo	dataset	seed	nb_neur	nb_hid	nb_repl	time

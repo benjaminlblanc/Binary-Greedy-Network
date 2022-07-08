@@ -1,0 +1,1 @@
+algo	dataset	seed	architecture	nb_param	nb_repl	C	train_loss	valid_loss	test_loss
