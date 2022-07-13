@@ -83,7 +83,7 @@ def linear_layer(dataset,
     while curr_num_neur < max_nb_neur :
         # We use the Lasso regression to find the orientation of the current HP.
         w_t = lasso_reg.fit(X = X_t, y = y_t).coef_
-        # If theregularization is too strong, it is minimized a little.
+        # If the regularization is too strong, it is minimized a little.
         while np.sum(abs(w_t)) < 1e-5 :
             C /= 1.5
             lasso_reg = Lasso(alpha = C)
