@@ -12,9 +12,7 @@ import numpy as np
 from time import time
 from sklearn.linear_model import Lasso
 from sklearn.model_selection import ParameterGrid
-from utils import train_valid_loaders, write, find_threshold, expand_dataset_dy, \
-    optimal_cd, normalize_input_space, reset_to_last, fix_last, obtain_perf, \
-    print_perf, update_y_t, remove_hp, display_evolution, load_dataset
+from utils import *
 
 def linear_layer(dataset, 
                dataset_name, 
