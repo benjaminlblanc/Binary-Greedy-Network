@@ -14,15 +14,7 @@ from sklearn.exceptions import ConvergenceWarning
 simplefilter("ignore", category=ConvergenceWarning)
 
 
-def launch(experiment_name='BGN_diabete',
-           dataset_name=['diabete'],
-           seed=[20241203],
-           n_folds=[0],
-           max_neur=[15],
-           max_hdlr=[1],
-           max_repl=[100],
-           max_coef_per_neur=[2],
-           patience=[15]):
+def launch(experiment_name, dataset_name, seed,n_folds, max_neur, max_hdlr, max_repl, max_coef_per_neur, patience):
     """
         The experiment launcher.
 
@@ -63,35 +55,31 @@ def launch(experiment_name='BGN_diabete',
     for i, task_dict in enumerate(param_grid):
         print(f"Launching task {i + 1}/{n_tasks} : {task_dict}\n")
         cnt_nw = is_job_already_done(experiment_name, task_dict, fold_number=None)
-        if (cnt_nw >= max(task_dict['n_folds'], 1)):
+        if cnt_nw >= max(task_dict['n_folds'], 1):
             print("Already done; passing...\n")
         else:
-            train_load, test, dx, dy, f_n = load_dataset(task_dict['dataset_name'], 0.80, task_dict['seed'],
+            train_load, test, dy, f_n = load_dataset(task_dict['dataset_name'], 0.80, task_dict['seed'],
                                                          task_dict['n_folds'])
             for fold_num in range(max(task_dict['n_folds'], 1)):
-                cnt_nw = is_job_already_done(experiment_name, task_dict, fold_number=fold_num)
-                if (cnt_nw == 0):
+                if cnt_nw == 0:
                     if task_dict['n_folds'] > 0:
                         print(f"\tLaunching fold {fold_num + 1}/{task_dict['n_folds']}\n")
                     train, valid = train_valid_loaders(train_load[fold_num], train_split=0.75)
                     arch = ''
                     t_before = time()
-                    fc_lay = create_layer
-                    weighting = True if 'MTPL2' in task_dict['dataset_name'] else False
-                    tr_l, vd_l, te_l, nn = fc_lay((train, valid, test[fold_num], f_n),
-                                                   task_dict['dataset_name'],
-                                                   task_dict['seed'],
-                                                   task_dict['n_folds'],
-                                                   fold_num,
-                                                   task_dict['max_neur'],
-                                                   arch,
-                                                   0,
-                                                   task_dict['max_repl'],
-                                                   task_dict['max_coef_per_neur'],
-                                                   task_dict['patience'],
-                                                   dy,
-                                                   experiment_name,
-                                                   weighting)
+                    tr_l, vd_l, te_l, nn = create_layer((train, valid, test[fold_num], f_n),
+                                                       task_dict['dataset_name'],
+                                                       task_dict['seed'],
+                                                       task_dict['n_folds'],
+                                                       fold_num,
+                                                       task_dict['max_neur'],
+                                                       arch,
+                                                       0,
+                                                       task_dict['max_repl'],
+                                                       task_dict['max_coef_per_neur'],
+                                                       task_dict['patience'],
+                                                       dy,
+                                                       experiment_name)
                     num_hid_lay = 1
                     file = open("results/" + str(experiment_name) + "_done.txt", "a")
                     file.write('BGN' + '\t' + task_dict['dataset_name'] + '\t' + str(task_dict['seed']) +
@@ -101,4 +89,12 @@ def launch(experiment_name='BGN_diabete',
                                str(task_dict['patience']) + "\t" + str(tr_l) + "\t" + str(vd_l) + "\t" + str(te_l) +
                                "\t" + str(nn) + "\t" + str(time() - t_before) + "\n")
                     file.close()
-launch()
+launch(experiment_name='BGN_diabete',
+       dataset_name=['diabete'],
+       seed=[20241202],
+       n_folds=[0],
+       max_neur=[15],
+       max_hdlr=[1],
+       max_repl=[100],
+       max_coef_per_neur=[2],
+       patience=[15])
