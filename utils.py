@@ -31,12 +31,11 @@ def create_layer(dataset,
                  seed,
                  folds,
                  fold_num,
-                 max_nb_neur,
-                 p,
+                 max_neur,
                  architecture,
                  res_param,
                  max_repl_pr_epoch,
-                 nb_max_coef_per_neur,
+                 max_coef_per_neur,
                  patience,
                  dy,
                  file_name,
@@ -51,7 +50,7 @@ def create_layer(dataset,
         dataset (Tuple of n_examples x n_features np.arrays): Train, validation and test datasets.
         dataset_name (str): The dataset name.
         seed (int): A random seed to use.
-        max_nb_neur (int): Maximum number of neurons in the layer.
+        max_neur (int): Maximum number of neurons in the layer.
         architecture (str): Architecture of the preceding hidden layers of the BNN.
         res_param (int): Number of non-zero parameters in the preceding layers.
         max_repl_pr_epoch (int): Maximum number of hyperplanes to be removed and
@@ -98,23 +97,23 @@ def create_layer(dataset,
     print(f"Valid R2: {round(1 - np.mean((valid[:, -1] - glm_freq.predict(valid[:, :-1])) ** 2 * vd_wei) / vd_var, 4)}")
     print(f"Test  R2: {round(1 - np.mean((test[:, -1] - glm_freq.predict(test[:, :-1])) ** 2 * te_wei) / te_var, 4)}")
 
-    hist = {'non_zero_param': np.zeros(max_nb_neur),  # ... number of non-zero parameters
+    hist = {'non_zero_param': np.zeros(max_neur),  # ... number of non-zero parameters
             'tr_loss': [],  # ... training loss
             'vd_loss': [],  # ... validation loss
             'te_loss': [],  # ... test loss
-            'wb': np.zeros((n_features + 1, max_nb_neur)),  # ... w_t and b_t
-            'cd': np.zeros((max_nb_neur + 1))}  # ... c_t and d_t
+            'wb': np.zeros((n_features + 1, max_neur)),  # ... w_t and b_t
+            'cd': np.zeros((max_neur + 1))}  # ... c_t and d_t
 
-    red = {'train': np.ones((n_train, max_nb_neur + 1)),  # ... training feature space
-           'valid': np.ones((n_valid, max_nb_neur + 1)),  # ... validation feature space
-           'test': np.ones((n_test, max_nb_neur + 1))}  # ... test feature space
+    red = {'train': np.ones((n_train, max_neur + 1)),  # ... training feature space
+           'valid': np.ones((n_valid, max_neur + 1)),  # ... validation feature space
+           'test': np.ones((n_test, max_neur + 1))}  # ... test feature space
 
-    last = {'non_zero_param': np.zeros(max_nb_neur),
-            'train': np.ones((n_train, max_nb_neur + 1)),  # ... training feature space
-            'valid': np.ones((n_valid, max_nb_neur + 1)),  # ... validation feature space
-            'test': np.ones((n_test, max_nb_neur + 1)),  # ... test feature space
-            'wb': np.zeros((n_features + 1, max_nb_neur)),
-            'cd': np.zeros((max_nb_neur + 1)),
+    last = {'non_zero_param': np.zeros(max_neur),
+            'train': np.ones((n_train, max_neur + 1)),  # ... training feature space
+            'valid': np.ones((n_valid, max_neur + 1)),  # ... validation feature space
+            'test': np.ones((n_test, max_neur + 1)),  # ... test feature space
+            'wb': np.zeros((n_features + 1, max_neur)),
+            'cd': np.zeros((max_neur + 1)),
             'tr_loss': math.inf}
     tot_cnt = 0  # Keeps track of how many remove-replace iterations have been done
     suc_cnt = 0  # Keeps track of how many remove-replace iterations have been done since last successful one
@@ -122,16 +121,16 @@ def create_layer(dataset,
     curr_num_neur = 0  # Keeps track of how many hyperplanes have been placed
     best_vd_loss = math.inf
     w_t = np.array([0])
-    if nb_max_coef_per_neur == 0:
-        nb_max_coef_per_neur = len(X_t[0])
-    while curr_num_neur < max_nb_neur:
+    if max_coef_per_neur == 0:
+        max_coef_per_neur = len(X_t[0])
+    while curr_num_neur < max_neur:
         # We use the Lasso regression to find the orientation of the current HP.
         ite = 0
-        while C_max - C_min > 0.1 or np.sum(abs(w_t)) == 0 or np.sum(abs(w_t) > 0) > nb_max_coef_per_neur:
+        while C_max - C_min > 0.1 or np.sum(abs(w_t)) == 0 or np.sum(abs(w_t) > 0) > max_coef_per_neur:
             C = (C_max + C_min) / 2
             w_t = Lasso(alpha=C).fit(X=X_t, y=y_t / np.var(y_t) * 1000).coef_
             # If the regularization is too weak, it is upgraded a little.
-            if np.sum(abs(w_t) > 0) > nb_max_coef_per_neur:
+            if np.sum(abs(w_t) > 0) > max_coef_per_neur:
                 C_min = C
             # If the regularization is too strong, it is minimized a little.
             else:
@@ -189,8 +188,8 @@ def create_layer(dataset,
             R2 = 1 - te_err / np.var(test[:, -1])
             write(file_name, 'BGN', dataset_name, seed, folds, fold_num, architecture + str(curr_num_neur + 1),
                   np.sum(hist['wb'] != 0) + curr_num_neur + 1 + res_param,
-                  len(np.unique(np.nonzero(hist['wb'])[1])) - 1, max_repl_pr_epoch, nb_max_coef_per_neur,
-                  p, C, patience, [tr_err, vd_err, te_err], R2)
+                  len(np.unique(np.nonzero(hist['wb'])[1])) - 1, max_repl_pr_epoch, max_coef_per_neur,
+                  C, patience, [tr_err, vd_err, te_err], R2)
 
             hist['tr_loss'].append(tr_err.copy())
             hist['vd_loss'].append(vd_err.copy())
@@ -224,7 +223,7 @@ def create_layer(dataset,
             fix_last(hist, red, last)
 
             # An iteration of the remove-replace technique begins by removing the oldest HP
-            hist['cd'] = np.zeros((max_nb_neur + 1))
+            hist['cd'] = np.zeros((max_neur + 1))
 
             # We update y_t once again, since a HP has been removed
             curr_neur = 0 if curr_neur == curr_num_neur else curr_neur + 1
@@ -248,7 +247,7 @@ def create_layer(dataset,
 
         if curr_num_neur > patience:
             if min(hist['vd_loss'][-patience:]) > min(hist['vd_loss']):
-                curr_num_neur = max_nb_neur
+                curr_num_neur = max_neur
 
     # np.savetxt(f'Mathieu_1/models/w_{dataset_name}.txt', np.transpose(best_wd[:,:-1] / std), delimiter=',')
     # np.savetxt(f'Mathieu_1/models/b_{dataset_name}.txt', np.squeeze(best_wd[:,-1] - np.sum(hist['wb'][:, :-1] / std * mean, axis=-1)), delimiter=',')
@@ -306,7 +305,7 @@ def train_valid_loaders(dataset, train_split=0.8, seed=42):
 
 
 def write(file_name, algo, dataset, seed, fold, fold_number, architecture, num_non_zero_param, num_inputs,
-          max_repl_pr_epoch, max_coef, p, C, patience, tot, R2):
+          max_repl_pr_epoch, max_coef, C, patience, tot, R2):
     """
     Writes in a .txt file the hyperparameters and results of a training of the BGN algorithm
         on a given dataset.
@@ -327,7 +326,7 @@ def write(file_name, algo, dataset, seed, fold, fold_number, architecture, num_n
     file = open("results/" + str(file_name) + ".txt", "a")
     file.write(algo + '\t' + dataset + '\t' + str(seed) + '\t' + str(fold) + '\t' + str(fold_number) + '\t' + str(architecture) +
                '\t' + str(num_non_zero_param) + '\t' + str(num_inputs) + '\t' + str(max_repl_pr_epoch) + '\t' +
-               str(max_coef) + '\t' + str(p) + '\t' + str(C) + '\t' + str(patience) + '\t' + str(tot[0]) + "\t" +
+               str(max_coef) + '\t' + str(C) + '\t' + str(patience) + '\t' + str(tot[0]) + "\t" +
                str(tot[1]) + "\t" + str(tot[2]) + "\t" + str(R2) + "\n")
     file.close()
 
@@ -677,7 +676,7 @@ def weights_cnn_to_weights_fc(weights_cnn, filter_dims, feature_dims, stride=2):
                             m + l * filter_dims[0] + k * filter_dims[1] * filter_dims[0]]
     return weights_fc
 
-def adjust_weights(train, valid, test, red, c_0, c_1, p, print_perf=False):
+def adjust_weights(train, valid, test, red, c_0, c_1, print_perf=False):
         weights = np.ones(len(train))
         summ_1 = 0
         summ_2 = 0
@@ -689,7 +688,7 @@ def adjust_weights(train, valid, test, red, c_0, c_1, p, print_perf=False):
                 inds_vd = np.squeeze(np.all(red['valid'] == uni, axis=1))
                 inds_te = np.squeeze(np.all(red['test'] == uni, axis=1))
                 mean = np.mean(train[inds_tr, -1])
-                prop = ((np.abs(mean) + 1) / 2) ** (2 ** (-p))
+                prop = ((np.abs(mean) + 1) / 2)
                 weights[inds_tr] = prop + (1 - 2 * prop) * (1 + np.sign(train[inds_tr, -1]) * np.sign(mean)) / 2
                 summ_1 += abs(sum((train[inds_tr, -1] + 1) / 2 / c_1 - 1))
                 summ_2 += abs(sum((valid[inds_vd, -1] + 1) / 2 / c_1 - 1))
@@ -713,14 +712,14 @@ def adjust_weights(train, valid, test, red, c_0, c_1, p, print_perf=False):
             trigger = True
         return weights, trigger
 
-def find_w_t(X_t, y_t, weights, C_0, C_1, nb_max_coef_per_neur):
-    if nb_max_coef_per_neur == 0:
+def find_w_t(X_t, y_t, weights, C_0, C_1, max_coef_per_neur):
+    if max_coef_per_neur == 0:
         reg = LinearRegression()
     else:
         reg = Lasso(alpha=10 ** ((C_0 + C_1) / 2))
     w_t = reg.fit(X=X_t, y=y_t, sample_weight=weights).coef_
 
-    if np.sum(abs(w_t) > 0) > nb_max_coef_per_neur or np.sum(abs(w_t)) < 1e-5:
+    if np.sum(abs(w_t) > 0) > max_coef_per_neur or np.sum(abs(w_t)) < 1e-5:
         # We use the Lasso regression to find the orientation of the current HP.
         reg = Lasso(alpha=10 ** C_0)
         w_t_0 = reg.fit(X=X_t, y=y_t, sample_weight=weights).coef_
@@ -730,7 +729,7 @@ def find_w_t(X_t, y_t, weights, C_0, C_1, nb_max_coef_per_neur):
             C_1 += 1
             reg = Lasso(alpha=10 ** C_1)
             w_t_1 = reg.fit(X=X_t, y=y_t, sample_weight=weights).coef_
-        while np.sum(abs(w_t_0) > 0) <= nb_max_coef_per_neur:
+        while np.sum(abs(w_t_0) > 0) <= max_coef_per_neur:
             C_0 -= 1
             reg = Lasso(alpha=10 ** C_0)
             w_t_0 = reg.fit(X=X_t, y=y_t, sample_weight=weights).coef_
@@ -739,11 +738,11 @@ def find_w_t(X_t, y_t, weights, C_0, C_1, nb_max_coef_per_neur):
         w_t = reg.fit(X=X_t, y=y_t, sample_weight=weights).coef_
         n_it = 0
         n_re = 0
-        while np.sum(abs(w_t) > 0) > nb_max_coef_per_neur or np.sum(abs(w_t)) < 1e-5:
+        while np.sum(abs(w_t) > 0) > max_coef_per_neur or np.sum(abs(w_t)) < 1e-5:
             n_it += 1
             if np.sum(abs(w_t)) < 1e-100:
                 C_1 = (C_0 + C_1) / 2
-            elif np.sum(abs(w_t) > 0) > nb_max_coef_per_neur:
+            elif np.sum(abs(w_t) > 0) > max_coef_per_neur:
                 C_0 = (C_0 + C_1) / 2
             if n_it >= 25:
                 C_0, C_1 = -10, 10
@@ -753,7 +752,7 @@ def find_w_t(X_t, y_t, weights, C_0, C_1, nb_max_coef_per_neur):
                     reg = LinearRegression()
                     w_t = reg.fit(X=X_t, y=y_t, sample_weight=weights).coef_
                     inds = np.argsort(np.abs(w_t))
-                    w_t[inds[:-nb_max_coef_per_neur]] *= 0
+                    w_t[inds[:-max_coef_per_neur]] *= 0
                     n_re = 0
                     break
             reg = Lasso(alpha=10 ** ((C_0 + C_1) / 2))
@@ -981,12 +980,12 @@ def is_job_already_done(experiment_name, task_dict, fold_number=None):
         with open("results/" + str(experiment_name) + "_done.txt", "r") as tes:
             tess = [line.strip().split('\t') for line in tes]
         tes.close()
-        is_it_new = ['BGN', task_dict['dataset_name'], str(task_dict['seed']), str(task_dict['folds'])]
+        is_it_new = ['BGN', task_dict['dataset_name'], str(task_dict['seed']), str(task_dict['n_folds'])]
         if fold_number is not None:
             is_it_new += [str(fold_number)]
-        is_it_new += [str(task_dict['nb_max_neur']), str(task_dict['nb_max_hdlr']),
-                     str(task_dict['max_repl_pr_epoch']), str(task_dict['nb_max_coef_per_neur']),
-                     str(task_dict['p']), str(task_dict['initial_C']), str(task_dict['patience'])]
+        is_it_new += [str(task_dict['max_neur']), str(task_dict['max_hdlr']),
+                     str(task_dict['max_repl']), str(task_dict['max_coef_per_neur']),
+                     str(task_dict['initial_C']), str(task_dict['patience'])]
         for a in tess:
             if fold_number is None:
                 a.pop(4)
@@ -994,10 +993,10 @@ def is_job_already_done(experiment_name, task_dict, fold_number=None):
                 cnt_nw += 1
     except FileNotFoundError:
         file = open("results/" + str(experiment_name) + ".txt", "a")
-        file.write("algo\tdataset\tseed\tfold\tfold_number\tarchitecture\tnb_param\tnb_input\tnb_repl\tmax_coef\tp\tC\tpatience\ttrain_loss\tvalid_loss\ttest_loss\n")
+        file.write("algo\tdataset\tseed\tfold\tfold_number\tarchitecture\tparam\tinput\trepl\tmax_coef\tC\tpatience\ttrain_loss\tvalid_loss\ttest_loss\n")
         file.close()
         file = open("results/" + str(experiment_name) + "_done.txt", "a")
-        file.write("algo\tdataset\tseed\tfolds\tfold_number\tnb_neur\tnb_hid\tnb_repl\tmax_coef\tp\tC\tpatience\ttime\n")
+        file.write("algo\tdataset\tseed\tfolds\tfold_number\tnb_neur\thid\trepl\tmax_coef\tC\tpatience\ttime\n")
         file.close()
     return cnt_nw
 
