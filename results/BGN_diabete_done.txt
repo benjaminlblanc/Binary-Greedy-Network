@@ -1,0 +1,2 @@
+algo	dataset	seed	folds	fold_number	max_neur	max_hid	repl	max_coef	patience	final_tr_R2	final_vd_R2	final_te_R2	final_arch	time
+BGN	diabete	20241202	0	0	15	1	100	2	15	0.48894324067438966	0.5232133362009814	0.39209842459699495	3	2.757460832595825
