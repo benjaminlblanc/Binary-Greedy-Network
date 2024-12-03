@@ -85,7 +85,7 @@ def create_layer(dataset,
     tr_var = np.mean((train[:, -1] - np.mean(train[:, -1])) ** 2 * tr_wei)
     vd_var = np.mean((valid[:, -1] - np.mean(valid[:, -1])) ** 2 * vd_wei)
     te_var = np.mean((test[:, -1] - np.mean(test[:, -1])) ** 2 * te_wei)
-    C_min, C_max = 0, 1e4  # Regularization parameter
+    C_min, C_max = 0, 1e5  # Regularization parameter
     n_train = len(train)
     n_valid = len(valid)
     n_test = len(test)
@@ -984,8 +984,7 @@ def is_job_already_done(experiment_name, task_dict, fold_number=None):
         if fold_number is not None:
             is_it_new += [str(fold_number)]
         is_it_new += [str(task_dict['max_neur']), str(task_dict['max_hdlr']),
-                     str(task_dict['max_repl']), str(task_dict['max_coef_per_neur']),
-                     str(task_dict['initial_C']), str(task_dict['patience'])]
+                     str(task_dict['max_repl']), str(task_dict['max_coef_per_neur']), str(task_dict['patience'])]
         for a in tess:
             if fold_number is None:
                 a.pop(4)
@@ -993,10 +992,10 @@ def is_job_already_done(experiment_name, task_dict, fold_number=None):
                 cnt_nw += 1
     except FileNotFoundError:
         file = open("results/" + str(experiment_name) + ".txt", "a")
-        file.write("algo\tdataset\tseed\tfold\tfold_number\tarchitecture\tparam\tinput\trepl\tmax_coef\tC\tpatience\ttrain_loss\tvalid_loss\ttest_loss\n")
+        file.write("algo\tdataset\tseed\tfold\tfold_number\tarchitecture\tparam\tinput\trepl\tmax_coef\tpatience\ttrain_loss\tvalid_loss\ttest_loss\n")
         file.close()
         file = open("results/" + str(experiment_name) + "_done.txt", "a")
-        file.write("algo\tdataset\tseed\tfolds\tfold_number\tnb_neur\thid\trepl\tmax_coef\tC\tpatience\ttime\n")
+        file.write("algo\tdataset\tseed\tfolds\tfold_number\tnb_neur\thid\trepl\tmax_coef\tpatience\ttime\n")
         file.close()
     return cnt_nw
 
