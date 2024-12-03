@@ -12,7 +12,6 @@ from sklearn.model_selection import ParameterGrid
 from sklearn.exceptions import ConvergenceWarning
 from warnings import simplefilter
 import h5py
-from datasets.peptides_BGN.data_loader_with_threshold import *
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

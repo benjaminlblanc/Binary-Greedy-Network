@@ -14,10 +14,10 @@ from sklearn.exceptions import ConvergenceWarning
 simplefilter("ignore", category=ConvergenceWarning)
 
 
-def launch(experiment_name='anions',
-           dataset_name=['anions'],
+def launch(experiment_name='diabete',
+           dataset_name=['diabete'],
            seed=[0],
-           folds=[0],  # 0 for standard; k for k-CV
+           folds=[0],
            nb_max_neur=[15],
            nb_max_hdlr=[1],
            max_repl_pr_epoch=[100],
@@ -32,10 +32,10 @@ def launch(experiment_name='anions',
             by the hidden layer.
 
         Args:
-            dataset_name (str): The dataset name. Choices (UCI):
-                                                    'bike_hour', 'carbon', 'diabete', 'housing', 'hung_pox',
-                                                    'ist_stock_usd', 'parking', 'power_plant', 'solar_flare',
-                                                           'portfolio', 'turbine', "anions",
+            dataset_name (str): The dataset name. Choices: 'bike_hour', 'carbon', 'diabete', 'housing', 'hung_pox',
+                                                           'ist_stock_usd', 'parking', 'power_plant', 'solar_flare',
+                                                           'portfolio' or 'turbine'.
+            # "anions",
             # "anions_0.02",
             # "anions_0.05",
             # "cations",
@@ -43,6 +43,7 @@ def launch(experiment_name='anions',
             # "cations_0.05",
 
             seed (int): A random seed to use.
+            folds (): Number of folds. 0 for standard k for k-CV
             max_nb_neur (int): Maximum number of neurons in the layer.
             architecture (str): Architecture of the preceding hidden layers of the BNN.
             res_param (int): Number of non-zero parameters in the preceding layers.
